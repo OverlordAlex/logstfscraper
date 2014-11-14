@@ -78,13 +78,13 @@ def load(profile):
                 play.team = info[0].text
                 play.class_played = info[2].i["data-title"]
                 play.kills, play.assists, play.deaths = float(info[3].text), float(info[4].text), int(info[5].text)
-                damage, damagepm = float(info[6].text), float(info[7].text)
-                damagetaken, damagetakenpm = float(info[10].text), float(info[11].text)
+                play.damage, play.damagepm = float(info[6].text), float(info[7].text)
+                play.damagetaken, play.damagetakenpm = float(info[10].text), float(info[11].text)
                 #backstabs
                 #headshots
                 #who knows what
                 #airshots = int(info[13].text)
-                caps = float(info[-1].text)
+                play.caps = float(info[-1].text)
                 games_played.append(play)
 
         # progress
@@ -111,11 +111,47 @@ def main():
 
     gamenum = range(len(deaths))
 
+    team = [0 if game.team == "Blu" else 1 for game in games ]
+    print "Red:", sum(team), "/", len(team)
+
+    classes = {}
+    for game in games:
+        cl = game.team + game.class_played
+        if cl in classes:
+            classes[cl] += 1
+        else:
+            classes[cl] = 1
+
+
+    dam = np.array([game.damage for game in games if game.class_played != "Medic"])
+    damtaken = np.array([game.damagetaken for game in games if game.class_played != "Medic"])
+    damv = [np.average(damtaken)*(dam[i]/damtaken[i]) for i in range(len(dam)) if damtaken[i] > 0]
+    print damv
+
+    fit = np.polyfit(range(len(damv)), damv, 1, full=True)
+    slope = fit[0][0]
+    intercept = fit[0][1]
+    xl = [0, gamenum[-1]]
+    yl = [slope*xx + intercept for xx in xl]
+    plt.plot(xl, yl)
+
+    plt.plot(gamenum, dam[::-1], label="damage done")
+    plt.plot(gamenum, damtaken[::-1], label="damage taken")
+    #plt.plot(gamenum, damv[::-1], label="dam/taken")
+    plt.legend()
+    plt.show()
+
+    X = np.arange(len(classes))
+    plt.bar(X, classes.values(), align="center", width=0.5)
+    plt.xticks(X, classes.keys())
+    #plt.show()
+
+
     plt.plot(gamenum, kills[::-1], label="kills")
     plt.plot(gamenum, ka[::-1], label="kills+assists")
     plt.plot(gamenum, deaths[::-1], label="deaths")
     plt.legend()
-    plt.show()
+    #plt.show()
 
     kpd = kills[::-1]/deaths[::-1]
     kapd = ka[::-1]/deaths[::-1]
@@ -131,7 +167,7 @@ def main():
     plt.plot(gamenum, kapd, label="ka/d")
     #plt.plot([0, gamenum[-1]], [kpd[0], kpd[-1]])
     plt.legend()
-    plt.show()
+    #plt.show()
 
 
 if __name__ == "__main__":
