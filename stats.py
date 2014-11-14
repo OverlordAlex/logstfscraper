@@ -103,21 +103,35 @@ def main():
     # load the profile
     games = load(profile)
 
-    print games
-
-    kills = np.array([game.kills for game in games])
-    assists = np.array([game.assists for game in games])
+    kills = np.array([game.kills for game in games if game.class_played != "Medic"])
+    assists = np.array([game.assists for game in games if game.class_played != "Medic"])
     ka = kills + assists
 
-    deaths = np.array([game.deaths for game in games])
+    deaths = np.array([game.deaths for game in games if game.class_played != "Medic"])
 
     gamenum = range(len(deaths))
 
-    print kills
-
-    plt.plot(kills, gamenum)
+    plt.plot(gamenum, kills[::-1], label="kills")
+    plt.plot(gamenum, ka[::-1], label="kills+assists")
+    plt.plot(gamenum, deaths[::-1], label="deaths")
+    plt.legend()
     plt.show()
 
+    kpd = kills[::-1]/deaths[::-1]
+    kapd = ka[::-1]/deaths[::-1]
+
+    fit = np.polyfit(gamenum, kapd, 1, full=True)
+    slope = fit[0][0]
+    intercept = fit[0][1]
+    xl = [0, gamenum[-1]]
+    yl = [slope*xx + intercept for xx in xl]
+    plt.plot(xl, yl)
+
+    plt.plot(gamenum, kpd, label="k/d")
+    plt.plot(gamenum, kapd, label="ka/d")
+    #plt.plot([0, gamenum[-1]], [kpd[0], kpd[-1]])
+    plt.legend()
+    plt.show()
 
 
 if __name__ == "__main__":
