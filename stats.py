@@ -26,9 +26,9 @@ def load(profile):
         profile = "logs.tf/profile/" + profile
 
 
-    if os.path.isfile("saved." + profile):
+    if os.path.isfile("saved." + profile.split('/')[-1]):
         if 'y' in raw_input("Old data detected, use this? y/n (n): ").lower():
-            return pickle.load("saved." + profile)
+            return pickle.load(open("saved." + profile.split('/')[-1], "rb"))
 
 
     profile_url = requests.get("http://" + profile)
@@ -52,9 +52,13 @@ def load(profile):
         for link in links:
             games.append("http://logs.tf" + link.get('href'))
 
+        # progress
+        sys.stdout.write('.')
+        sys.stdout.flush()
+
 
     games_played = []
-
+    print "scraping done"
 
     for game in games:
         page = BeautifulSoup(requests.get(game).text)
@@ -83,8 +87,14 @@ def load(profile):
                 caps = float(info[-1].text)
                 games_played.append(play)
 
-        pickle.dump(games_played, open("saved." + profile, "wb"))
-        return games_played
+        # progress
+        sys.stdout.write('.')
+        sys.stdout.flush()
+
+    print "loading done"
+
+    pickle.dump(games_played, open("saved." + profile.split('/')[-1], "wb"))
+    return games_played
 
 
 def main():
@@ -93,16 +103,19 @@ def main():
     # load the profile
     games = load(profile)
 
+    print games
+
     kills = np.array([game.kills for game in games])
     assists = np.array([game.assists for game in games])
     ka = kills + assists
 
-    deaths = np.array([game.deaths for game in game])
+    deaths = np.array([game.deaths for game in games])
 
     gamenum = range(len(deaths))
 
+    print kills
 
-    plt.plot(ka, game_num)
+    plt.plot(kills, gamenum)
     plt.show()
 
 
