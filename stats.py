@@ -1,6 +1,8 @@
 import sys
 from bs4 import BeautifulSoup
 import requests
+import pickle
+import os
 
 class player:
     team = None
@@ -15,13 +17,17 @@ class player:
         return self.team + "-" + self.class_played + " : " + str(self.kills) + "+" + str(self.assists) + "/" + str(self.deaths)
 
 
-def main():
-    profile = sys.argv[1] if len(sys.argv) == 2 else raw_input("Enter profile number or link: ")
-
+def load(profile):
     # ensure that the profile points to a link
     if len(profile.split('/')) == 1:
         # assume that the number has been given
         profile = "logs.tf/profile/" + profile
+
+
+    if os.path.isfile("saved." + profile):
+        if 'y' in raw_input("Old data detected, use this? y/n (n): ").lower():
+            return pickle.load("saved." + profile)
+
 
     profile_url = requests.get("http://" + profile)
     profile_page = BeautifulSoup(profile_url.text)
@@ -75,6 +81,14 @@ def main():
                 caps = float(info[-1].text)
                 games_played.append(play)
 
+        pickle.dump(games_played, open("saved." + profile, "wb"))
+        return games_played
+
+
+def main():
+    profile = sys.argv[1] if len(sys.argv) == 2 else raw_input("Enter profile number or link: ")
+
+    games = load(profile)
 
     print games_played
 
