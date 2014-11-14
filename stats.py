@@ -3,6 +3,8 @@ from bs4 import BeautifulSoup
 import requests
 import pickle
 import os
+import matplotlib.pyplot as plt
+import numpy as np
 
 class player:
     team = None
@@ -88,9 +90,21 @@ def load(profile):
 def main():
     profile = sys.argv[1] if len(sys.argv) == 2 else raw_input("Enter profile number or link: ")
 
+    # load the profile
     games = load(profile)
 
-    print games_played
+    kills = np.array([game.kills for game in games])
+    assists = np.array([game.assists for game in games])
+    ka = kills + assists
+
+    deaths = np.array([game.deaths for game in game])
+
+    gamenum = range(len(deaths))
+
+
+    plt.plot(ka, game_num)
+    plt.show()
+
 
 
 if __name__ == "__main__":
